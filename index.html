@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Super Speed - STL Edition</title>
+    <title>Formula Super Speed - Module 3</title>
     <style>
         body {
             margin: 0;
@@ -17,103 +17,6 @@
         #canvas-container {
             width: 100vw;
             height: 100vh;
-        }
-
-        /* --- LOADING SCREEN --- */
-        #loading-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: #0a0a0c;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-family: monospace;
-        }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid #222;
-            border-top: 5px solid #ff1801;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- TEAM SELECTION OVERLAY --- */
-        #menu-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(135deg, #11141a 0%, #050508 100%);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            transition: opacity 0.5s ease;
-        }
-
-        .menu-title {
-            font-size: 36px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-            color: #ff1801;
-            text-shadow: 0 0 15px rgba(255,24,1,0.3);
-        }
-
-        .selection-container {
-            display: flex;
-            gap: 20px;
-            max-width: 1000px;
-            flex-wrap: wrap;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .team-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid #333;
-            border-radius: 12px;
-            width: 220px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .team-card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .team-ferrari { border-left: 6px solid #e60000; }
-        .team-redbull { border-left: 6px solid #0600ef; }
-        .team-mclaren { border-left: 6px solid #ff8700; }
-        .team-mercedes { border-left: 6px solid #00a19c; }
-
-        .team-name { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
-        
-        .driver-btn {
-            background: #222;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 8px 12px;
-            margin: 5px 0;
-            width: 100%;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            text-align: left;
-            transition: background 0.2s;
-        }
-        .driver-btn:hover {
-            background: #ff1801;
-            border-color: #ff1801;
         }
 
         /* --- HUD SYSTEM --- */
@@ -132,7 +35,6 @@
             align-items: center;
             pointer-events: none;
             box-shadow: 0 15px 35px rgba(0,0,0,0.7);
-            z-index: 10;
         }
 
         .hud-metric { display: flex; flex-direction: column; align-items: center; }
@@ -153,7 +55,7 @@
             border: 1px solid #444;
             transition: all 0.2s;
         }
-        #drs-indicator.available { background: #333; color: #fff; border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        #drs-indicator.available { background: #333; color: #fff; border-color: #fff; }
         #drs-indicator.active { background: #00ff44; color: #000; border-color: #00ff44; box-shadow: 0 0 15px #00ff44; }
         #drs-indicator.disabled-weather { background: #551111; color: #aa5555; border-color: #551111; text-decoration: line-through; }
 
@@ -166,9 +68,10 @@
             overflow: hidden;
         }
         #tyre-wear-fill { width: 100%; height: 100%; background: #00ff44; transition: width 0.1s; }
+
         #weather-display { font-size: 18px; font-weight: bold; text-transform: uppercase; transition: color 0.3s; }
 
-        /* Identity Card */
+        /* Identity Tag */
         #identity-card {
             position: absolute;
             top: 20px;
@@ -177,19 +80,43 @@
             padding: 12px 20px;
             border-radius: 10px;
             color: white;
-            border-right: 4px solid #fff;
+            border-right: 4px solid #ff1801;
             pointer-events: none;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            z-index: 10;
         }
         #player-driver-name { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
         #player-team-name { font-size: 11px; text-transform: uppercase; color: #aaa; margin-top: 2px; }
 
+        /* Quick-Select Tyre Selector */
+        #tyre-selector-box {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .tyre-select-btn {
+            background: #222;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tyre-select-btn:hover { background: #444; }
+
         #controls-card {
             position: absolute;
-            bottom: 20px;
+            top: 20px;
             left: 20px;
             background: rgba(0, 0, 0, 0.8);
             border-left: 4px solid #ff1801;
@@ -198,130 +125,32 @@
             color: #ddd;
             font-size: 12px;
             line-height: 1.5;
-            max-width: 240px;
+            max-width: 250px;
             pointer-events: none;
-            z-index: 10;
         }
         .key { background: #333; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #fff; }
-
-        /* --- TELEMETRY UI LAYOUTS --- */
-        #leaderboard-box {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 240px;
-            background: rgba(10, 12, 16, 0.85);
-            border: 1px solid #2a303b;
-            border-radius: 8px;
-            color: white;
-            padding: 10px;
-            z-index: 10;
-        }
-        .leaderboard-header {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ff1801;
-            border-bottom: 1px solid #2a303b;
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .leaderboard-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            padding: 3px 5px;
-            margin: 2px 0;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-        .leaderboard-row.player-row {
-            background: rgba(255, 24, 1, 0.25);
-            border-left: 3px solid #ff1801;
-            font-weight: bold;
-        }
-        .lane-flag {
-            width: 4px;
-            margin-right: 6px;
-            display: inline-block;
-        }
-
-        #session-stats-box {
-            position: absolute;
-            top: 150px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            color: white;
-            font-family: monospace;
-            font-size: 12px;
-            min-width: 160px;
-            z-index: 10;
-        }
-        .stat-line { display: flex; justify-content: space-between; margin: 4px 0; }
-        .stat-lbl { color: #888; text-transform: uppercase; font-size: 10px; }
-        .stat-val { color: #00ffcc; font-weight: bold; }
     </style>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
 </head>
 <body>
 
-    <div id="loading-screen" style="display: none;">
-        <div class="spinner"></div>
-        <div id="loading-text">LOADING TELEMETRY CAR & CIRCUIT MESHES...</div>
-    </div>
-
-    <div id="menu-overlay">
-        <div class="menu-title">Formula Super Speed</div>
-        <div style="font-size: 16px; color: #aaa; margin-bottom: 10px;">Select a Team & Driver to Takeover</div>
-        <div class="selection-container">
-            <div class="team-card team-ferrari">
-                <div class="team-name" style="color: #e60000;">Scuderia Ferrari</div>
-                <button class="driver-btn" onclick="selectDriver('Ferrari', 'C. Leclerc', 'L. Hamilton')">Charles Leclerc</button>
-                <button class="driver-btn" onclick="selectDriver('Ferrari', 'L. Hamilton', 'C. Leclerc')">Lewis Hamilton</button>
-            </div>
-            <div class="team-card team-redbull">
-                <div class="team-name" style="color: #469bff;">Red Bull Racing</div>
-                <button class="driver-btn" onclick="selectDriver('Red Bull', 'M. Verstappen', 'L. Lawson')">Max Verstappen</button>
-                <button class="driver-btn" onclick="selectDriver('Red Bull', 'L. Lawson', 'M. Verstappen')">Liam Lawson</button>
-            </div>
-            <div class="team-card team-mclaren">
-                <div class="team-name" style="color: #ff8700;">McLaren F1</div>
-                <button class="driver-btn" onclick="selectDriver('McLaren', 'L. Norris', 'O. Piastri')">Lando Norris</button>
-                <button class="driver-btn" onclick="selectDriver('McLaren', 'O. Piastri', 'L. Norris')">Oscar Piastri</button>
-            </div>
-            <div class="team-card team-mercedes">
-                <div class="team-name" style="color: #00a19c;">Mercedes AMG</div>
-                <button class="driver-btn" onclick="selectDriver('Mercedes', 'G. Russell', 'K. Antonelli')">George Russell</button>
-                <button class="driver-btn" onclick="selectDriver('Mercedes', 'K. Antonelli', 'G. Russell')">Kimi Antonelli</button>
-            </div>
-        </div>
-    </div>
-
     <div id="canvas-container"></div>
 
-    <div id="leaderboard-box" style="display: none;">
-        <div class="leaderboard-header">Live Telemetry Standings</div>
-        <div id="leaderboard-rows-container"></div>
+    <div id="identity-card">
+        <span id="player-driver-name">CHASSIS TEST</span>
+        <span id="player-team-name">FSS DEVELOPMENT BUILD</span>
     </div>
 
-    <div id="session-stats-box" style="display: none;">
-        <div class="stat-line"><span class="stat-lbl">Session Progress</span><span class="stat-val" id="lap-val">LAP 1</span></div>
-        <div class="stat-line"><span class="stat-lbl">Distance Run</span><span class="stat-val" id="dist-val">0.0 km</span></div>
-        <div class="stat-line"><span class="stat-lbl">Top Speed</span><span class="stat-val" id="top-speed-val" style="color:#ffcc00">0 km/h</span></div>
+    <div id="tyre-selector-box">
+        <span style="color:#aaa; font-size:11px; align-self:center; margin-right:5px;">Fit Tyre:</span>
+        <button class="tyre-select-btn" style="border-color:#ff3333;" onclick="changeTyre('Soft')">SOFT</button>
+        <button class="tyre-select-btn" style="border-color:#ffff33;" onclick="changeTyre('Medium')">MED</button>
+        <button class="tyre-select-btn" style="border-color:#ffffff;" onclick="changeTyre('Hard')">HARD</button>
+        <button class="tyre-select-btn" style="border-color:#00ff44;" onclick="changeTyre('Intermediate')">INTER</button>
+        <button class="tyre-select-btn" style="border-color:#0088ff;" onclick="changeTyre('Wet')">WET</button>
     </div>
 
-    <div id="identity-card" style="display: none;">
-        <span id="player-driver-name">-</span>
-        <span id="player-team-name">-</span>
-    </div>
-
-    <div id="hud" style="display: none;">
+    <div id="hud">
         <div class="hud-metric">
             <span class="hud-label">Speed</span>
             <span id="speed-val" class="hud-value">0 <span style="font-size:12px">km/h</span></span>
@@ -350,25 +179,16 @@
     </div>
 
     <div id="controls-card">
-        <h3>Broadcast Telemetry</h3>
+        <h3>Weather Environment</h3>
         <div><span class="key">W</span> / <span class="key">S</span> Throttle / Brake</div>
-        <div><span class="key">A</span> / <span class="key">D</span> Steering</div>
-        <div><span class="key">Spacebar</span> Toggle DRS</div>
+        <div><span class="key">Spacebar</span> Toggle DRS (Dry Only)</div>
+        <hr style="border: 0; border-top: 1px solid #444; margin: 8px 0;">
+        <div style="font-size: 11px; color: #aaa;">
+            <strong>Cycle:</strong> Weather shifts every 20s automatically. Fit appropriate compounds to prevent severe aquaplaning spins!
+        </div>
     </div>
 
     <script>
-        // --- EXACT ASSET CONFIGURATION PATHS ---
-        const ASSET_TRACK_PATH = 'track.stl';
-        const ASSET_CAR_PATH = 'car.stl';
-
-        let cachedCarGeometry = null;
-        let globalTrackMesh = null; // Stored globally for continuous collision tracking
-
-        // --- COLLISION RAYCASTER INITS ---
-        const raycaster = new THREE.Raycaster();
-        const downVector = new THREE.Vector3(0, -1, 0);
-
-        // --- PERFORMANCE CONSTANTS ---
         let BASE_MAX_SPEED = 340 / 3.6; 
         let CURRENT_MAX_SPEED = BASE_MAX_SPEED;
         const BASE_ACCEL = 14.5;    
@@ -376,126 +196,426 @@
         const BRAKE_FORCE = 30.0;     
 
         const TYRE_COMPOUNDS = {
-            Soft: { name: 'Soft', color: '#ff3333', label: 'SOFT', gripDry: 1.05, gripDamp: 0.30, gripWet: 0.10, wearDry: 1.8, wearWet: 3.6 }
+            Soft:         { name: 'Soft',         color: '#ff3333', label: 'SOFT',  gripDry: 1.05, gripDamp: 0.30, gripWet: 0.10, wearDry: 1.8,  wearWet: 3.6 },
+            Medium:       { name: 'Medium',       color: '#ffff33', label: 'MED',   gripDry: 1.00, gripDamp: 0.25, gripWet: 0.08, wearDry: 1.0,  wearWet: 2.0 },
+            Hard:         { name: 'Hard',         color: '#ffffff', label: 'HARD',  gripDry: 0.94, gripDamp: 0.20, gripWet: 0.05, wearDry: 0.5,  wearWet: 1.0 },
+            Intermediate: { name: 'Intermediate', color: '#00ff44', label: 'INTER', gripDry: 0.80, gripDamp: 0.95, gripWet: 0.50, wearDry: 2.0,  wearWet: 0.8 },
+            Wet:          { name: 'Wet',          color: '#0088ff', label: 'WET',   gripDry: 0.70, gripDamp: 0.75, gripWet: 1.00, wearDry: 3.5,  wearWet: 0.6 }
         };
 
         const WEATHER_STATES = {
-            DRY:     { id: 'DRY',     name: 'Sunny',       color: '#ffcc00', sky: 0x13171c, sunIntensity: 0.8, rainDensity: 0 },
-            DAMP:    { id: 'DAMP',    name: 'Light Rain',  color: '#00ffaa', sky: 0x0f1217, sunIntensity: 0.25, rainDensity: 900 },
-            FLOODED: { id: 'FLOODED', name: 'Stormfall',   color: '#0088ff', sky: 0x050608, sunIntensity: 0.05, rainDensity: 2800 }
+            DRY:     { id: 'DRY',     name: 'Sunny',       color: '#ffcc00', sky: 0x1a222d, sunIntensity: 0.9, rainDensity: 0 },
+            DAMP:    { id: 'DAMP',    name: 'Light Rain',  color: '#00ffaa', sky: 0x0f1217, sunIntensity: 0.3, rainDensity: 800 },
+            FLOODED: { id: 'FLOODED', name: 'Stormfall',   color: '#0088ff', sky: 0x050608, sunIntensity: 0.05, rainDensity: 2500 }
         };
 
-        const MASTER_GRID_2025 = [
-            { team: 'Ferrari', driver: 'C. Leclerc', color: 0xe60000 }, { team: 'Ferrari', driver: 'L. Hamilton', color: 0xe60000 },
-            { team: 'Red Bull', driver: 'M. Verstappen', color: 0x0600ef }, { team: 'Red Bull', driver: 'L. Lawson', color: 0x0600ef },
-            { team: 'McLaren', driver: 'L. Norris', color: 0xff8700 }, { team: 'McLaren', driver: 'O. Piastri', color: 0xff8700 },
-            { team: 'Mercedes', driver: 'G. Russell', color: 0x00a19c }, { team: 'Mercedes', driver: 'K. Antonelli', color: 0x00a19c },
-            { team: 'Aston Martin', driver: 'F. Alonso', color: 0x00594f }, { team: 'Aston Martin', driver: 'L. Stroll', color: 0x00594f },
-            { team: 'Alpine', driver: 'P. Gasly', color: 0xff9ecb }, { team: 'Alpine', driver: 'J. Doohan', color: 0x0078c1 },
-            { team: 'RB Racing', driver: 'Y. Tsunoda', color: 0x469bff }, { team: 'RB Racing', driver: 'I. Hadjar', color: 0x469bff },
-            { team: 'Haas', driver: 'E. Ocon', color: 0xffffff }, { team: 'Haas', driver: 'O. Bearman', color: 0xcc0000 },
-            { team: 'Williams', driver: 'A. Albon', color: 0x002f6c }, { team: 'Williams', driver: 'C. Sainz', color: 0x002f6c },
-            { team: 'Kick Sauber', driver: 'N. Hulkenberg', color: 0x52e252 }, { team: 'Kick Sauber', driver: 'G. Bortoleto', color: 0x52e252 }
-        ];
-
         let scene, camera, renderer, clock = new THREE.Clock();
-        let car, sunLight, ambientLight;
+        let car, chassisMesh, drsFlapMesh, sunLight, ambientLight;
         let rainParticles, rainGeometry;
-        let gameActive = false;
 
         let currentWeather = WEATHER_STATES.DRY;
         let weatherTimer = 0;
 
-        let totalDistanceTraveled = 0;
-        let sessionTopSpeedKmh = 0;
-        let uiRefreshTimer = 0;
-
         const keys = { w:false, a:false, s:false, d:false, ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false, ' ':false };
-        const playerProfile = { team: '', driver: '', teammate: '' };
-        const aiCompetitors = [];
 
         const vehicle = {
             velocity: new THREE.Vector3(),
-            speed: 0, heading: 0, steeringAngle: 0, targetSteeringAngle: 0, 
-            teamColor: 0xff1801, 
+            speed: 0, heading: 0, steeringAngle: 0, targetSteeringAngle: 0, slipAngle: 0, teamColor: 0xff1801, // Defaulting to FSS Signature Racing Red
             activeTyre: TYRE_COMPOUNDS.Soft,
             tyreHealth: 100.0,
             drsAvailable: false,
             drsActive: false
         };
 
-        function selectDriver(team, selectedDriver, teammateDriver) {
-            playerProfile.team = team;
-            playerProfile.driver = selectedDriver;
-            playerProfile.teammate = teammateDriver;
-
-            document.getElementById('player-driver-name').innerText = selectedDriver.toUpperCase();
-            document.getElementById('player-team-name').innerText = team + " Racing Team";
-            
-            if(team === 'Ferrari') vehicle.teamColor = 0xe60000;
-            if(team === 'Red Bull') vehicle.teamColor = 0x0600ef;
-            if(team === 'McLaren') vehicle.teamColor = 0xff8700;
-            if(team === 'Mercedes') vehicle.teamColor = 0x00a19c;
-
-            document.getElementById('menu-overlay').style.opacity = 0;
-            setTimeout(() => {
-                document.getElementById('menu-overlay').remove();
-                document.getElementById('loading-screen').style.display = 'flex';
-                initEngine();
-            }, 500);
+        function changeTyre(compoundKey) {
+            vehicle.activeTyre = TYRE_COMPOUNDS[compoundKey];
+            vehicle.tyreHealth = 100.0; 
         }
 
-        function createDriverTag(nameString, hexColor) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            if (ctx.roundRect) {
-                ctx.roundRect(10, 10, 236, 44, 8); ctx.fill();
-                ctx.fillStyle = hexColor;
-                ctx.roundRect(10, 10, 8, 44, [8, 0, 0, 8]); ctx.fill();
-            } else {
-                ctx.fillRect(10, 10, 236, 44);
-                ctx.fillStyle = hexColor;
-                ctx.fillRect(10, 10, 8, 44);
-            }
-            ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif';
-            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(nameString.toUpperCase(), 130, 32);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(3.5, 0.875, 1);
-            sprite.position.set(0, 2.2, 0); 
-            return sprite;
-        }
+        // --- AUTOMATED WINDOW INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initEngine();
+        });
 
         function initEngine() {
             const container = document.getElementById('canvas-container');
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(currentWeather.sky);
-            scene.fog = new THREE.FogExp2(currentWeather.sky, 0.004);
+            scene.fog = new THREE.FogExp2(currentWeather.sky, 0.005);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             container.appendChild(renderer.domElement);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
 
             sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
-            sunLight.position.set(100, 250, 100);
+            sunLight.position.set(50, 100, 50);
             sunLight.castShadow = true;
             scene.add(sunLight);
 
+            createGroundGrid();
+            assembleF1Car();
             setupRainEngine();
 
-            const loader = new THREE.STLLoader();
+            window.addEventListener('keydown', (e) => handleKey(e, true));
+            window.addEventListener('keyup', (e) => handleKey(e, false));
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
+        }
+
+        function createGroundGrid() {
+            const size = 2000;
+            const floor = new THREE.Mesh(
+                new THREE.PlaneGeometry(size, size), 
+                new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.9 })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            const grid = new THREE.GridHelper(size, 150, 0xff1801, 0x2c3540);
+            grid.position.y = 0.01;
+            scene.add(grid);
+
+            const straightVisualA = new THREE.Mesh(new THREE.BoxGeometry(40, 0.05, 400), new THREE.MeshStandardMaterial({color: 0x181e26, roughness:0.8}));
+            straightVisualA.position.set(0, 0, 250);
+            scene.add(straightVisualA);
+            const straightVisualB = straightVisualA.clone();
+            straightVisualB.position.set(0, 0, -250);
+            scene.add(straightVisualB);
+        }
+
+        function assembleF1Car() {
+            car = new THREE.Group();
+            const bodyMat = new THREE.MeshStandardMaterial({ color: vehicle.teamColor, roughness: 0.2, metalness: 0.7 });
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 });
+            const tyreMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
+
+            chassisMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 4.2), bodyMat);
+            chassisMesh.position.y = 0.45;
+            chassisMesh.castShadow = true;
+            car.add(chassisMesh);
+
+            const nose = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 1.4), bodyMat);
+            nose.position.set(0, 0.32, 2.4);
+            car.add(nose);
+
+            const fWing = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.06, 0.5), wingMat);
+            fWing.position.set(0, 0.18, 3.0);
+            car.add(fWing);
+
+            const rWingPillarL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, 0.3), wingMat);
+            rWingPillarL.position.set(-0.6, 0.7, -1.9);
+            car.add(rWingPillarL);
+            const rWingPillarR = rWingPillarL.clone();
+            rWingPillarR.position.x = 0.6;
+            car.add(rWingPillarR);
+
+            drsFlapMesh = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 0.05), wingMat);
+            drsFlapMesh.position.set(0, 1.0, -1.9);
+            car.add(drsFlapMesh);
+
+            const wGeo = new THREE.CylinderGeometry(0.46, 0.46, 0.55, 20);
+            wGeo.rotateZ(Math.PI / 2);
+
+            const offsets = [
+                { x: -0.9, y: 0.46, z: 1.4, front: true }, { x: 0.9, y: 0.46, z: 1.4, front: true },
+                { x: -0.95, y: 0.46, z: -1.4, front: false }, { x: 0.95, y: 0.46, z: -1.4, front: false }
+            ];
+
+            car.wheels = [];
+            offsets.forEach(o => {
+                const wMesh = new THREE.Mesh(wGeo, tyreMat);
+                wMesh.position.set(o.x, o.y, o.z);
+                wMesh.castShadow = true;
+                car.add(wMesh);
+                car.wheels.push({ mesh: wMesh, isFront: o.front });
+            });
+
+            scene.add(car);
+        }
+
+        function setupRainEngine() {
+            const count = 3000;
+            rainGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+
+            for(let i=0; i<count*3; i+=3) {
+                positions[i] = (Math.random() - 0.5) * 120;
+                positions[i+1] = Math.random() * 60; 
+                positions[i+2] = (Math.random() - 0.5) * 120;
+            }
+
+            rainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             
-            // 1. Stream Track Mesh Data
-            loader.load(ASSET_TRACK_PATH, function (trackGeometry) {
+            const rainMat = new THREE.PointsMaterial({
+                color: 0x7799bb,
+                size: 0.12,
+                transparent: true,
+                opacity: 0.0 
+            });
+
+            rainParticles = new THREE.Points(rainGeometry, rainMat);
+            scene.add(rainParticles);
+        }
+
+        function handleKey(e, isPressed) {
+            if (e.key in keys) keys[e.key] = isPressed;
+            if (e.code in keys) keys[e.code] = isPressed;
+
+            if (isPressed && e.key === ' ' && vehicle.drsAvailable && currentWeather.id === 'DRY') {
+                vehicle.drsActive = !vehicle.drsActive;
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- CORE ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const dt = clock.getDelta();
+            if (dt <= 0) return;
+
+            const thrust = keys.w || keys.ArrowUp;
+            const brake = keys.s || keys.ArrowDown;
+            const left = keys.a || keys.ArrowLeft;
+            const right = keys.d || keys.ArrowRight;
+
+            // Weather Updates
+            weatherTimer += dt;
+            if (weatherTimer > 20.0) { 
+                weatherTimer = 0;
+                if (currentWeather.id === 'DRY') currentWeather = WEATHER_STATES.DAMP;
+                else if (currentWeather.id === 'DAMP') currentWeather = WEATHER_STATES.FLOODED;
+                else currentWeather = WEATHER_STATES.DRY;
+            }
+
+            const targetSky = new THREE.Color(currentWeather.sky);
+            scene.background.lerp(targetSky, 1.5 * dt);
+            scene.fog.color.lerp(targetSky, 1.5 * dt);
+            
+            sunLight.intensity += (currentWeather.sunIntensity - sunLight.intensity) * 1.5 * dt;
+            ambientLight.intensity += ((currentWeather.id === 'DRY' ? 0.4 : 0.15) - ambientLight.intensity) * 1.5 * dt;
+
+            let targetOpacity = 0.0;
+            if (currentWeather.id === 'DAMP') targetOpacity = 0.4;
+            if (currentWeather.id === 'FLOODED') targetOpacity = 0.85;
+            rainParticles.material.opacity += (targetOpacity - rainParticles.material.opacity) * 2.0 * dt;
+
+            if (rainParticles.material.opacity > 0.01) {
+                const positions = rainGeometry.attributes.position.array;
+                for(let i=0; i<positions.length; i+=3) {
+                    positions[i+1] -= (currentWeather.id === 'FLOODED' ? 45 : 30) * dt;
+                    if (positions[i+1] < 0) {
+                        positions[i] = car.position.x + (Math.random() - 0.5) * 100;
+                        positions[i+1] = 50 + Math.random() * 10;
+                        positions[i+2] = car.position.z + (Math.random() - 0.5) * 100;
+                    }
+                }
+                rainGeometry.attributes.position.needsUpdate = true;
+            }
+
+            // DRS Rules
+            if (currentWeather.id !== 'DRY') {
+                vehicle.drsAvailable = false;
+                vehicle.drsActive = false;
+            } else {
+                if (Math.abs(car.position.z) > 50 && Math.abs(car.position.x) < 30) {
+                    vehicle.drsAvailable = true;
+                } else {
+                    vehicle.drsAvailable = false;
+                    vehicle.drsActive = false;
+                }
+            }
+
+            if (brake) vehicle.drsActive = false;
+
+            // Grip Matrix Logic
+            let activeGrip = 1.0;
+            let activeWearRate = vehicle.activeTyre.wearDry;
+
+            if (currentWeather.id === 'DRY') {
+                activeGrip = vehicle.activeTyre.gripDry;
+                if (vehicle.activeTyre.name === 'Intermediate' || vehicle.activeTyre.name === 'Wet') {
+                    activeWearRate = vehicle.activeTyre.wearDry * 2.0; 
+                }
+            } else if (currentWeather.id === 'DAMP') {
+                activeGrip = vehicle.activeTyre.gripDamp;
+                if (vehicle.activeTyre.name === 'Intermediate') activeWearRate = vehicle.activeTyre.wearWet;
+                else if (vehicle.activeTyre.name === 'Wet') activeWearRate = vehicle.activeTyre.wearWet * 1.5;
+            } else if (currentWeather.id === 'FLOODED') {
+                activeGrip = vehicle.activeTyre.gripWet;
+                activeWearRate = vehicle.activeTyre.wearWet;
+            }
+
+            if (vehicle.speed > 1) {
+                const dist = Math.abs(vehicle.speed) * dt;
+                vehicle.tyreHealth -= dist * 0.007 * activeWearRate;
+                if (vehicle.tyreHealth < 0) vehicle.tyreHealth = 0;
+            }
+
+            let cliffSpeedLossCap = 1.0;
+            if (vehicle.tyreHealth < 40) {
+                const cliffFactor = vehicle.tyreHealth / 40.0;
+                activeGrip *= (0.45 + cliffFactor * 0.55); 
+                cliffSpeedLossCap = 0.60 + (cliffFactor * 0.40);
+            }
+
+            // Physics Mechanics
+            let activeDrag = BASE_DRAG;
+            if (vehicle.drsActive) {
+                CURRENT_MAX_SPEED = (BASE_MAX_SPEED + (15 / 3.6)) * cliffSpeedLossCap;
+                activeDrag = BASE_DRAG * 0.45;
+            } else {
+                CURRENT_MAX_SPEED = BASE_MAX_SPEED * cliffSpeedLossCap;
+            }
+
+            vehicle.speed = vehicle.velocity.dot(new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading));
+
+            if (thrust) {
+                const drsAccelBonus = vehicle.drsActive ? 1.25 : 1.0;
+                const tractionFactor = Math.max(0.2, activeGrip);
+                vehicle.speed += BASE_ACCEL * drsAccelBonus * tractionFactor * cliffSpeedLossCap * dt;
+            }
+            if (brake) {
+                if (vehicle.speed > 0.1) vehicle.speed -= BRAKE_FORCE * dt;
+                else {
+                    vehicle.speed -= BASE_ACCEL * 0.4 * dt;
+                    if (vehicle.speed < -12) vehicle.speed = -12;
+                }
+            }
+
+            if (!thrust && !brake) {
+                vehicle.speed -= vehicle.speed * activeDrag * dt;
+                if (Math.abs(vehicle.speed) < 0.05) vehicle.speed = 0;
+            }
+
+            if (vehicle.speed > CURRENT_MAX_SPEED) vehicle.speed = CURRENT_MAX_SPEED;
+
+            // Turn Handling
+            const speedKmh = Math.abs(vehicle.speed) * 3.6;
+            let maxTurnRadius = 0.28;
+            if (speedKmh <= 120) {
+                maxTurnRadius = 0.12 + (speedKmh / 120) * 0.25;
+            }
+
+            maxTurnRadius *= activeGrip;
+
+            if (left) vehicle.targetSteeringAngle = maxTurnRadius;
+            else if (right) vehicle.targetSteeringAngle = -maxTurnRadius;
+            else vehicle.targetSteeringAngle = 0;
+
+            vehicle.steeringAngle += (vehicle.targetSteeringAngle - vehicle.steeringAngle) * 4.5 * dt;
+
+            const isAquaplaning = (currentWeather.id !== 'DRY' && activeGrip < 0.4 && speedKmh > 40);
+            
+            if (isAquaplaning || (speedKmh > 10 && speedKmh < 90 && thrust && Math.abs(vehicle.steeringAngle) > (0.20 * activeGrip))) {
+                const slipSeverity = isAquaplaning ? 1.6 : 0.3;
+                vehicle.slipAngle += (vehicle.steeringAngle * slipSeverity - vehicle.slipAngle) * (isAquaplaning ? 1.5 : 3.0) * dt;
+            } else {
+                vehicle.slipAngle += (0 - vehicle.slipAngle) * 5.0 * dt;
+            }
+
+            vehicle.heading += vehicle.speed * vehicle.steeringAngle * 0.18 * dt;
+
+            // Matrix Updates
+            const moveHeading = vehicle.heading + vehicle.slipAngle;
+            const forwardVector = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), moveHeading);
+            
+            vehicle.velocity.copy(forwardVector).multiplyScalar(vehicle.speed);
+            car.position.addScaledVector(vehicle.velocity, dt);
+            car.rotation.y = vehicle.heading;
+
+            car.wheels.forEach(w => {
+                w.mesh.rotation.x += (vehicle.speed / 0.46) * dt;
+                if (w.isFront) w.mesh.rotation.y = vehicle.steeringAngle * 0.8;
+            });
+
+            chassisMesh.rotation.z = -(vehicle.speed * vehicle.steeringAngle) * 0.08;
+
+            if (vehicle.drsActive) {
+                drsFlapMesh.rotation.x = Math.PI / 2.3; drsFlapMesh.position.y = 1.12;
+            } else {
+                drsFlapMesh.rotation.x = 0; drsFlapMesh.position.y = 1.0;
+            }
+
+            if (Math.abs(car.position.z) > 950) car.position.z = -car.position.z;
+            if (Math.abs(car.position.x) > 950) car.position.x = -car.position.x;
+
+            const targetCamOffset = new THREE.Vector3(0, 2.1, -6.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading);
+            camera.position.lerp(car.position.clone().add(targetCamOffset), 8.0 * dt);
+            camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 0.7, 1.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading)));
+
+            renderer.render(scene, camera);
+            renderHUDApi(speedKmh, isAquaplaning);
+        }
+
+        function renderHUDApi(speedKmh, isAquaplaning) {
+            const displaySpeed = Math.max(0, Math.round(speedKmh));
+            document.getElementById('speed-val').innerHTML = `${displaySpeed} <span style="font-size:12px">km/h</span>`;
+
+            let gear = 'N';
+            if (vehicle.speed < -0.1) gear = 'R';
+            else if (displaySpeed === 0) gear = 'N';
+            else if (displaySpeed < 65)  gear = '1';
+            else if (displaySpeed < 115) gear = '2';
+            else if (displaySpeed < 165) gear = '3';
+            else if (displaySpeed < 215) gear = '4';
+            else if (displaySpeed < 265) gear = '5';
+            else if (displaySpeed < 305) gear = '6';
+            else if (displaySpeed < 335) gear = '7';
+            else gear = '8';
+            document.getElementById('gear-val').innerText = gear;
+
+            const drsBox = document.getElementById('drs-indicator');
+            if (currentWeather.id !== 'DRY') {
+                drsBox.innerText = 'DRS DISABLED';
+                drsBox.className = 'disabled-weather';
+            } else if (vehicle.drsActive) {
+                drsBox.innerText = 'DRS ACTIVE'; drsBox.className = 'active';
+            } else if (vehicle.drsAvailable) {
+                drsBox.innerText = 'DRS AVAIL'; drsBox.className = 'available';
+            } else {
+                drsBox.innerText = 'DRS LOCK'; drsBox.className = '';
+            }
+
+            const healthFill = document.getElementById('tyre-wear-fill');
+            const wearText = document.getElementById('wear-pct');
+            const compLabel = document.getElementById('compound-label');
+            const compoundsBox = document.getElementById('tyre-display');
+
+            const health = Math.round(vehicle.tyreHealth);
+            wearText.innerText = `${health}%`;
+            healthFill.style.width = `${health}%`;
+
+            if (health >= 70) healthFill.style.background = '#00ff44';
+            else if (health >= 40) healthFill.style.background = '#ffaa00';
+            else healthFill.style.background = '#ff3333';
+
+            compLabel.innerText = vehicle.activeTyre.label;
+            compoundsBox.style.color = vehicle.activeTyre.color;
+
+            const weatherField = document.getElementById('weather-display');
+            if (isAquaplaning) {
+                weatherField.innerText = 'AQUAPLANING SLIP!';
+                weatherField.style.color = '#ff3366';
+            } else {
+                weatherField.innerText = currentWeather.name;
+                weatherField.style.color = currentWeather.color;
+            }
+        }
+    </script>
+</body>
+</html>
