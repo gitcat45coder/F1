@@ -1,8 +1,365 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Super Speed - STL Edition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- LOADING SCREEN --- */
+        #loading-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #0a0a0c;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: monospace;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid #222;
+            border-top: 5px solid #ff1801;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- TEAM SELECTION OVERLAY --- */
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #11141a 0%, #050508 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: opacity 0.5s ease;
+        }
+
+        .menu-title {
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            color: #ff1801;
+            text-shadow: 0 0 15px rgba(255,24,1,0.3);
+        }
+
+        .selection-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1000px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .team-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #333;
+            border-radius: 12px;
+            width: 220px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .team-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .team-ferrari { border-left: 6px solid #e60000; }
+        .team-redbull { border-left: 6px solid #0600ef; }
+        .team-mclaren { border-left: 6px solid #ff8700; }
+        .team-mercedes { border-left: 6px solid #00a19c; }
+
+        .team-name { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+        
+        .driver-btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            margin: 5px 0;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-align: left;
+            transition: background 0.2s;
+        }
+        .driver-btn:hover {
+            background: #ff1801;
+            border-color: #ff1801;
+        }
+
+        /* --- HUD SYSTEM --- */
+        #hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 25px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 30px;
+            border-radius: 16px;
+            border: 2px solid #333;
+            color: white;
+            align-items: center;
+            pointer-events: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+
+        .hud-metric { display: flex; flex-direction: column; align-items: center; }
+        .hud-label { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin-bottom: 3px; }
+        .hud-value { font-size: 28px; font-weight: bold; font-family: monospace; }
+
+        #speed-val { color: #00ffcc; }
+        #gear-val { color: #ffcc00; }
+        
+        #drs-indicator {
+            background: #222;
+            color: #555;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+            border: 1px solid #444;
+            transition: all 0.2s;
+        }
+        #drs-indicator.available { background: #333; color: #fff; border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        #drs-indicator.active { background: #00ff44; color: #000; border-color: #00ff44; box-shadow: 0 0 15px #00ff44; }
+        #drs-indicator.disabled-weather { background: #551111; color: #aa5555; border-color: #551111; text-decoration: line-through; }
+
+        #tyre-display { font-size: 18px; font-weight: bold; }
+        #tyre-wear-bar {
+            width: 80px; height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        #tyre-wear-fill { width: 100%; height: 100%; background: #00ff44; transition: width 0.1s; }
+        #weather-display { font-size: 18px; font-weight: bold; text-transform: uppercase; transition: color 0.3s; }
+
+        /* Identity Card */
+        #identity-card {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            border-right: 4px solid #fff;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            z-index: 10;
+        }
+        #player-driver-name { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+        #player-team-name { font-size: 11px; text-transform: uppercase; color: #aaa; margin-top: 2px; }
+
+        #controls-card {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 4px solid #ff1801;
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            color: #ddd;
+            font-size: 12px;
+            line-height: 1.5;
+            max-width: 240px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .key { background: #333; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #fff; }
+
+        /* --- TELEMETRY UI LAYOUTS --- */
+        #leaderboard-box {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 240px;
+            background: rgba(10, 12, 16, 0.85);
+            border: 1px solid #2a303b;
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            z-index: 10;
+        }
+        .leaderboard-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ff1801;
+            border-bottom: 1px solid #2a303b;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 3px 5px;
+            margin: 2px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .leaderboard-row.player-row {
+            background: rgba(255, 24, 1, 0.25);
+            border-left: 3px solid #ff1801;
+            font-weight: bold;
+        }
+        .lane-flag {
+            width: 4px;
+            margin-right: 6px;
+            display: inline-block;
+        }
+
+        #session-stats-box {
+            position: absolute;
+            top: 150px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            color: white;
+            font-family: monospace;
+            font-size: 12px;
+            min-width: 160px;
+            z-index: 10;
+        }
+        .stat-line { display: flex; justify-content: space-between; margin: 4px 0; }
+        .stat-lbl { color: #888; text-transform: uppercase; font-size: 10px; }
+        .stat-val { color: #00ffcc; font-weight: bold; }
+    </style>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+</head>
+<body>
+
+    <div id="loading-screen" style="display: none;">
+        <div class="spinner"></div>
+        <div id="loading-text">LOADING TELEMETRY CAR & CIRCUIT MESHES...</div>
+    </div>
+
+    <div id="menu-overlay">
+        <div class="menu-title">Formula Super Speed</div>
+        <div style="font-size: 16px; color: #aaa; margin-bottom: 10px;">Select a Team & Driver to Takeover</div>
+        <div class="selection-container">
+            <div class="team-card team-ferrari">
+                <div class="team-name" style="color: #e60000;">Scuderia Ferrari</div>
+                <button class="driver-btn" onclick="selectDriver('Ferrari', 'C. Leclerc', 'L. Hamilton')">Charles Leclerc</button>
+                <button class="driver-btn" onclick="selectDriver('Ferrari', 'L. Hamilton', 'C. Leclerc')">Lewis Hamilton</button>
+            </div>
+            <div class="team-card team-redbull">
+                <div class="team-name" style="color: #469bff;">Red Bull Racing</div>
+                <button class="driver-btn" onclick="selectDriver('Red Bull', 'M. Verstappen', 'L. Lawson')">Max Verstappen</button>
+                <button class="driver-btn" onclick="selectDriver('Red Bull', 'L. Lawson', 'M. Verstappen')">Liam Lawson</button>
+            </div>
+            <div class="team-card team-mclaren">
+                <div class="team-name" style="color: #ff8700;">McLaren F1</div>
+                <button class="driver-btn" onclick="selectDriver('McLaren', 'L. Norris', 'O. Piastri')">Lando Norris</button>
+                <button class="driver-btn" onclick="selectDriver('McLaren', 'O. Piastri', 'L. Norris')">Oscar Piastri</button>
+            </div>
+            <div class="team-card team-mercedes">
+                <div class="team-name" style="color: #00a19c;">Mercedes AMG</div>
+                <button class="driver-btn" onclick="selectDriver('Mercedes', 'G. Russell', 'K. Antonelli')">George Russell</button>
+                <button class="driver-btn" onclick="selectDriver('Mercedes', 'K. Antonelli', 'G. Russell')">Kimi Antonelli</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="leaderboard-box" style="display: none;">
+        <div class="leaderboard-header">Live Telemetry Standings</div>
+        <div id="leaderboard-rows-container"></div>
+    </div>
+
+    <div id="session-stats-box" style="display: none;">
+        <div class="stat-line"><span class="stat-lbl">Session Progress</span><span class="stat-val" id="lap-val">LAP 1</span></div>
+        <div class="stat-line"><span class="stat-lbl">Distance Run</span><span class="stat-val" id="dist-val">0.0 km</span></div>
+        <div class="stat-line"><span class="stat-lbl">Top Speed</span><span class="stat-val" id="top-speed-val" style="color:#ffcc00">0 km/h</span></div>
+    </div>
+
+    <div id="identity-card" style="display: none;">
+        <span id="player-driver-name">-</span>
+        <span id="player-team-name">-</span>
+    </div>
+
+    <div id="hud" style="display: none;">
+        <div class="hud-metric">
+            <span class="hud-label">Speed</span>
+            <span id="speed-val" class="hud-value">0 <span style="font-size:12px">km/h</span></span>
+        </div>
+        <div style="width: 1px; height: 35px; background: #444;"></div>
+        <div class="hud-metric">
+            <span class="hud-label">Gear</span>
+            <span id="gear-val" class="hud-value">N</span>
+        </div>
+        <div style="width: 1px; height: 35px; background: #444;"></div>
+        <div class="hud-metric">
+            <span class="hud-label">DRS Wing</span>
+            <div id="drs-indicator">DRS</div>
+        </div>
+        <div style="width: 1px; height: 35px; background: #444;"></div>
+        <div class="hud-metric">
+            <span class="hud-label">Tyre Wear</span>
+            <div id="tyre-display" style="color: #ff3366;"><span id="compound-label">S</span> <span style="font-size:12px;color:#fff" id="wear-pct">100%</span></div>
+            <div id="tyre-wear-bar"><div id="tyre-wear-fill"></div></div>
+        </div>
+        <div style="width: 1px; height: 35px; background: #444;"></div>
+        <div class="hud-metric">
+            <span class="hud-label">Track State</span>
+            <span id="weather-display" style="color: #ffcc00;">Sunny</span>
+        </div>
+    </div>
+
+    <div id="controls-card">
+        <h3>Broadcast Telemetry</h3>
+        <div><span class="key">W</span> / <span class="key">S</span> Throttle / Brake</div>
+        <div><span class="key">A</span> / <span class="key">D</span> Steering</div>
+        <div><span class="key">Spacebar</span> Toggle DRS</div>
+    </div>
+
+    <script>
         // --- EXACT ASSET CONFIGURATION PATHS ---
-        // Updated to look right next to your index.html file!
-        const ASSET_TRACK_PATH = 'track.stl';
-        const ASSET_CAR_PATH = 'car.stl';
+        const ASSET_TRACK_PATH = './track.stl';
+        const ASSET_CAR_PATH = './car.stl';
 
         let cachedCarGeometry = null;
 
@@ -491,7 +848,6 @@
 
                 ai.distanceTracked += ai.speed * ai.speedBonus * dt;
                 
-                // Keep visual movement relative or simple wrapping circuit loop
                 ai.mesh.position.z = 50 - (ai.distanceTracked % 800); 
                 ai.mesh.rotation.y = Math.PI; 
             });
