@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formula Super Speed - Module 3</title>
+    <title>Formula Super Speed - Module 3 Integrated</title>
     <style>
         body {
             margin: 0;
@@ -55,7 +55,7 @@
             border: 1px solid #444;
             transition: all 0.2s;
         }
-        #drs-indicator.available { background: #333; color: #fff; border-color: #fff; }
+        #drs-indicator.available { background: #333; color: #fff; border-color: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
         #drs-indicator.active { background: #00ff44; color: #000; border-color: #00ff44; box-shadow: 0 0 15px #00ff44; }
         #drs-indicator.disabled-weather { background: #551111; color: #aa5555; border-color: #551111; text-decoration: line-through; }
 
@@ -89,7 +89,7 @@
         #player-driver-name { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
         #player-team-name { font-size: 11px; text-transform: uppercase; color: #aaa; margin-top: 2px; }
 
-        /* Quick-Select Tyre Selector */
+        /* Dynamic Tyre Compound Swapper PIT Box */
         #tyre-selector-box {
             position: absolute;
             bottom: 110px;
@@ -111,6 +111,7 @@
             font-size: 11px;
             cursor: pointer;
             font-weight: bold;
+            transition: background 0.1s;
         }
         .tyre-select-btn:hover { background: #444; }
 
@@ -125,7 +126,7 @@
             color: #ddd;
             font-size: 12px;
             line-height: 1.5;
-            max-width: 250px;
+            max-width: 260px;
             pointer-events: none;
         }
         .key { background: #333; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #fff; }
@@ -138,11 +139,11 @@
 
     <div id="identity-card">
         <span id="player-driver-name">CHASSIS TEST</span>
-        <span id="player-team-name">FSS DEVELOPMENT BUILD</span>
+        <span id="player-team-name">FSS BUILD - MODULE 3</span>
     </div>
 
     <div id="tyre-selector-box">
-        <span style="color:#aaa; font-size:11px; align-self:center; margin-right:5px;">Fit Tyre:</span>
+        <span style="color:#aaa; font-size:11px; align-self:center; margin-right:5px;">Fit Compound:</span>
         <button class="tyre-select-btn" style="border-color:#ff3333;" onclick="changeTyre('Soft')">SOFT</button>
         <button class="tyre-select-btn" style="border-color:#ffff33;" onclick="changeTyre('Medium')">MED</button>
         <button class="tyre-select-btn" style="border-color:#ffffff;" onclick="changeTyre('Hard')">HARD</button>
@@ -179,22 +180,25 @@
     </div>
 
     <div id="controls-card">
-        <h3>Weather Environment</h3>
+        <h3>Environmental Dynamics</h3>
         <div><span class="key">W</span> / <span class="key">S</span> Throttle / Brake</div>
+        <div><span class="key">A</span> / <span class="key">D</span> Steering</div>
         <div><span class="key">Spacebar</span> Toggle DRS (Dry Only)</div>
         <hr style="border: 0; border-top: 1px solid #444; margin: 8px 0;">
         <div style="font-size: 11px; color: #aaa;">
-            <strong>Cycle:</strong> Weather shifts every 20s automatically. Fit appropriate compounds to prevent severe aquaplaning spins!
+            <strong>Dynamic Cycle:</strong> Track weather variables shift automatically every 20s. Fit matching wet compounds below or risk loss of traction and high-speed aquaplaning!
         </div>
     </div>
 
     <script>
+        // --- PERFORMANCE CONSTANTS ---
         let BASE_MAX_SPEED = 340 / 3.6; 
         let CURRENT_MAX_SPEED = BASE_MAX_SPEED;
         const BASE_ACCEL = 14.5;    
         const BASE_DRAG = 0.08;      
         const BRAKE_FORCE = 30.0;     
 
+        // --- TYRE COMPOUND PROFILE MATRIX (DRY vs INTER vs WET GRIP / DEGRADATION) ---
         const TYRE_COMPOUNDS = {
             Soft:         { name: 'Soft',         color: '#ff3333', label: 'SOFT',  gripDry: 1.05, gripDamp: 0.30, gripWet: 0.10, wearDry: 1.8,  wearWet: 3.6 },
             Medium:       { name: 'Medium',       color: '#ffff33', label: 'MED',   gripDry: 1.00, gripDamp: 0.25, gripWet: 0.08, wearDry: 1.0,  wearWet: 2.0 },
@@ -203,12 +207,14 @@
             Wet:          { name: 'Wet',          color: '#0088ff', label: 'WET',   gripDry: 0.70, gripDamp: 0.75, gripWet: 1.00, wearDry: 3.5,  wearWet: 0.6 }
         };
 
+        // --- ENVIRONMENTAL STATE MAPS ---
         const WEATHER_STATES = {
-            DRY:     { id: 'DRY',     name: 'Sunny',       color: '#ffcc00', sky: 0x1a222d, sunIntensity: 0.9, rainDensity: 0 },
-            DAMP:    { id: 'DAMP',    name: 'Light Rain',  color: '#00ffaa', sky: 0x0f1217, sunIntensity: 0.3, rainDensity: 800 },
-            FLOODED: { id: 'FLOODED', name: 'Stormfall',   color: '#0088ff', sky: 0x050608, sunIntensity: 0.05, rainDensity: 2500 }
+            DRY:     { id: 'DRY',     name: 'Sunny',       color: '#ffcc00', sky: 0x13171c, sunIntensity: 0.8, rainDensity: 0 },
+            DAMP:    { id: 'DAMP',    name: 'Light Rain',  color: '#00ffaa', sky: 0x0f1217, sunIntensity: 0.25, rainDensity: 900 },
+            FLOODED: { id: 'FLOODED', name: 'Stormfall',   color: '#0088ff', sky: 0x050608, sunIntensity: 0.05, rainDensity: 2800 }
         };
 
+        // --- GAME SESSION ENGINE FIELDS ---
         let scene, camera, renderer, clock = new THREE.Clock();
         let car, chassisMesh, drsFlapMesh, sunLight, ambientLight;
         let rainParticles, rainGeometry;
@@ -220,19 +226,21 @@
 
         const vehicle = {
             velocity: new THREE.Vector3(),
-            speed: 0, heading: 0, steeringAngle: 0, targetSteeringAngle: 0, slipAngle: 0, teamColor: 0xff1801, // Defaulting to FSS Signature Racing Red
+            speed: 0, heading: 0, steeringAngle: 0, targetSteeringAngle: 0, slipAngle: 0, 
+            teamColor: 0xff1801, // Custom signature FSS Red
             activeTyre: TYRE_COMPOUNDS.Soft,
             tyreHealth: 100.0,
             drsAvailable: false,
             drsActive: false
         };
 
+        // --- HOT SWAP TYRE SWAP FUNCTION ---
         function changeTyre(compoundKey) {
             vehicle.activeTyre = TYRE_COMPOUNDS[compoundKey];
             vehicle.tyreHealth = 100.0; 
         }
 
-        // --- AUTOMATED WINDOW INITIALIZATION ---
+        // --- AUTOMATED WINDOW LIFECYCLE LISTENERS ---
         window.addEventListener('DOMContentLoaded', () => {
             initEngine();
         });
@@ -242,7 +250,7 @@
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(currentWeather.sky);
-            scene.fog = new THREE.FogExp2(currentWeather.sky, 0.005);
+            scene.fog = new THREE.FogExp2(currentWeather.sky, 0.004);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -254,7 +262,7 @@
             ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
             scene.add(ambientLight);
 
-            sunLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
             sunLight.position.set(50, 100, 50);
             sunLight.castShadow = true;
             scene.add(sunLight);
@@ -284,9 +292,10 @@
             grid.position.y = 0.01;
             scene.add(grid);
 
-            const straightVisualA = new THREE.Mesh(new THREE.BoxGeometry(40, 0.05, 400), new THREE.MeshStandardMaterial({color: 0x181e26, roughness:0.8}));
+            const straightVisualA = new THREE.Mesh(new THREE.BoxGeometry(40, 0.05, 400), new THREE.MeshStandardMaterial({color: 0x1d2530, roughness: 0.8}));
             straightVisualA.position.set(0, 0, 250);
             scene.add(straightVisualA);
+            
             const straightVisualB = straightVisualA.clone();
             straightVisualB.position.set(0, 0, -250);
             scene.add(straightVisualB);
@@ -343,11 +352,11 @@
         }
 
         function setupRainEngine() {
-            const count = 3000;
+            const count = 3500;
             rainGeometry = new THREE.BufferGeometry();
             const positions = new Float32Array(count * 3);
 
-            for(let i=0; i<count*3; i+=3) {
+            for(let i = 0; i < count * 3; i += 3) {
                 positions[i] = (Math.random() - 0.5) * 120;
                 positions[i+1] = Math.random() * 60; 
                 positions[i+2] = (Math.random() - 0.5) * 120;
@@ -357,7 +366,7 @@
             
             const rainMat = new THREE.PointsMaterial({
                 color: 0x7799bb,
-                size: 0.12,
+                size: 0.14,
                 transparent: true,
                 opacity: 0.0 
             });
@@ -370,6 +379,7 @@
             if (e.key in keys) keys[e.key] = isPressed;
             if (e.code in keys) keys[e.code] = isPressed;
 
+            // Spacebar DRS Rules Override
             if (isPressed && e.key === ' ' && vehicle.drsAvailable && currentWeather.id === 'DRY') {
                 vehicle.drsActive = !vehicle.drsActive;
             }
@@ -381,7 +391,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- CORE ANIMATION LOOP ---
+        // --- MAIN CORE RUNTIME ENGINE ---
         function animate() {
             requestAnimationFrame(animate);
 
@@ -393,7 +403,7 @@
             const left = keys.a || keys.ArrowLeft;
             const right = keys.d || keys.ArrowRight;
 
-            // Weather Updates
+            // 1. Weather Shifting System Timeline
             weatherTimer += dt;
             if (weatherTimer > 20.0) { 
                 weatherTimer = 0;
@@ -402,22 +412,25 @@
                 else currentWeather = WEATHER_STATES.DRY;
             }
 
+            // Lerp atmospheric color modifications
             const targetSky = new THREE.Color(currentWeather.sky);
-            scene.background.lerp(targetSky, 1.5 * dt);
-            scene.fog.color.lerp(targetSky, 1.5 * dt);
+            scene.background.lerp(targetSky, 1.2 * dt);
+            scene.fog.color.lerp(targetSky, 1.2 * dt);
             
-            sunLight.intensity += (currentWeather.sunIntensity - sunLight.intensity) * 1.5 * dt;
-            ambientLight.intensity += ((currentWeather.id === 'DRY' ? 0.4 : 0.15) - ambientLight.intensity) * 1.5 * dt;
+            sunLight.intensity += (currentWeather.sunIntensity - sunLight.intensity) * 1.2 * dt;
+            ambientLight.intensity += ((currentWeather.id === 'DRY' ? 0.4 : 0.15) - ambientLight.intensity) * 1.2 * dt;
 
+            // Process Rain System Opacity
             let targetOpacity = 0.0;
-            if (currentWeather.id === 'DAMP') targetOpacity = 0.4;
-            if (currentWeather.id === 'FLOODED') targetOpacity = 0.85;
+            if (currentWeather.id === 'DAMP') targetOpacity = 0.45;
+            if (currentWeather.id === 'FLOODED') targetOpacity = 0.90;
             rainParticles.material.opacity += (targetOpacity - rainParticles.material.opacity) * 2.0 * dt;
 
+            // Cascade vertex heights down if rain is visible
             if (rainParticles.material.opacity > 0.01) {
                 const positions = rainGeometry.attributes.position.array;
-                for(let i=0; i<positions.length; i+=3) {
-                    positions[i+1] -= (currentWeather.id === 'FLOODED' ? 45 : 30) * dt;
+                for(let i = 0; i < positions.length; i += 3) {
+                    positions[i+1] -= (currentWeather.id === 'FLOODED' ? 48 : 32) * dt;
                     if (positions[i+1] < 0) {
                         positions[i] = car.position.x + (Math.random() - 0.5) * 100;
                         positions[i+1] = 50 + Math.random() * 10;
@@ -427,7 +440,7 @@
                 rainGeometry.attributes.position.needsUpdate = true;
             }
 
-            // DRS Rules
+            // 2. Multi-environmental Safety Overrides (DRS Disabling)
             if (currentWeather.id !== 'DRY') {
                 vehicle.drsAvailable = false;
                 vehicle.drsActive = false;
@@ -439,55 +452,57 @@
                     vehicle.drsActive = false;
                 }
             }
-
             if (brake) vehicle.drsActive = false;
 
-            // Grip Matrix Logic
+            // 3. Complex Track Surface Grip & Wear Calculation Engine
             let activeGrip = 1.0;
             let activeWearRate = vehicle.activeTyre.wearDry;
 
             if (currentWeather.id === 'DRY') {
                 activeGrip = vehicle.activeTyre.gripDry;
+                // Running rain tyres on dry asphalt cooks them fast
                 if (vehicle.activeTyre.name === 'Intermediate' || vehicle.activeTyre.name === 'Wet') {
-                    activeWearRate = vehicle.activeTyre.wearDry * 2.0; 
+                    activeWearRate = vehicle.activeTyre.wearDry * 2.2; 
                 }
             } else if (currentWeather.id === 'DAMP') {
                 activeGrip = vehicle.activeTyre.gripDamp;
                 if (vehicle.activeTyre.name === 'Intermediate') activeWearRate = vehicle.activeTyre.wearWet;
-                else if (vehicle.activeTyre.name === 'Wet') activeWearRate = vehicle.activeTyre.wearWet * 1.5;
+                else if (vehicle.activeTyre.name === 'Wet') activeWearRate = vehicle.activeTyre.wearWet * 1.4;
             } else if (currentWeather.id === 'FLOODED') {
                 activeGrip = vehicle.activeTyre.gripWet;
                 activeWearRate = vehicle.activeTyre.wearWet;
             }
 
+            // Accumulate Tyre Degradation over space translation
             if (vehicle.speed > 1) {
                 const dist = Math.abs(vehicle.speed) * dt;
-                vehicle.tyreHealth -= dist * 0.007 * activeWearRate;
+                vehicle.tyreHealth -= dist * 0.0075 * activeWearRate;
                 if (vehicle.tyreHealth < 0) vehicle.tyreHealth = 0;
             }
 
-            let cliffSpeedLossCap = 1.0;
+            // Performance Decay Cliff
+            let cliffFactorLoss = 1.0;
             if (vehicle.tyreHealth < 40) {
-                const cliffFactor = vehicle.tyreHealth / 40.0;
-                activeGrip *= (0.45 + cliffFactor * 0.55); 
-                cliffSpeedLossCap = 0.60 + (cliffFactor * 0.40);
+                const healthRatio = vehicle.tyreHealth / 40.0;
+                activeGrip *= (0.45 + healthRatio * 0.55); 
+                cliffFactorLoss = 0.60 + (healthRatio * 0.40);
             }
 
-            // Physics Mechanics
+            // 4. Resolve Kinematics Motion Forces
             let activeDrag = BASE_DRAG;
             if (vehicle.drsActive) {
-                CURRENT_MAX_SPEED = (BASE_MAX_SPEED + (15 / 3.6)) * cliffSpeedLossCap;
+                CURRENT_MAX_SPEED = (BASE_MAX_SPEED + (15 / 3.6)) * cliffFactorLoss;
                 activeDrag = BASE_DRAG * 0.45;
             } else {
-                CURRENT_MAX_SPEED = BASE_MAX_SPEED * cliffSpeedLossCap;
+                CURRENT_MAX_SPEED = BASE_MAX_SPEED * cliffFactorLoss;
             }
 
             vehicle.speed = vehicle.velocity.dot(new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading));
 
             if (thrust) {
-                const drsAccelBonus = vehicle.drsActive ? 1.25 : 1.0;
-                const tractionFactor = Math.max(0.2, activeGrip);
-                vehicle.speed += BASE_ACCEL * drsAccelBonus * tractionFactor * cliffSpeedLossCap * dt;
+                const drsAccelerationBonus = vehicle.drsActive ? 1.25 : 1.0;
+                const surfaceTraction = Math.max(0.15, activeGrip);
+                vehicle.speed += BASE_ACCEL * drsAccelerationBonus * surfaceTraction * cliffFactorLoss * dt;
             }
             if (brake) {
                 if (vehicle.speed > 0.1) vehicle.speed -= BRAKE_FORCE * dt;
@@ -504,13 +519,10 @@
 
             if (vehicle.speed > CURRENT_MAX_SPEED) vehicle.speed = CURRENT_MAX_SPEED;
 
-            // Turn Handling
+            // 5. Downforce Dependent Steering Mechanics
             const speedKmh = Math.abs(vehicle.speed) * 3.6;
             let maxTurnRadius = 0.28;
-            if (speedKmh <= 120) {
-                maxTurnRadius = 0.12 + (speedKmh / 120) * 0.25;
-            }
-
+            if (speedKmh <= 120) { maxTurnRadius = 0.12 + (speedKmh / 120) * 0.25; }
             maxTurnRadius *= activeGrip;
 
             if (left) vehicle.targetSteeringAngle = maxTurnRadius;
@@ -519,18 +531,19 @@
 
             vehicle.steeringAngle += (vehicle.targetSteeringAngle - vehicle.steeringAngle) * 4.5 * dt;
 
-            const isAquaplaning = (currentWeather.id !== 'DRY' && activeGrip < 0.4 && speedKmh > 40);
+            // Hydroplaning Evaluation Check
+            const isAquaplaning = (currentWeather.id !== 'DRY' && activeGrip < 0.38 && speedKmh > 40);
             
             if (isAquaplaning || (speedKmh > 10 && speedKmh < 90 && thrust && Math.abs(vehicle.steeringAngle) > (0.20 * activeGrip))) {
-                const slipSeverity = isAquaplaning ? 1.6 : 0.3;
-                vehicle.slipAngle += (vehicle.steeringAngle * slipSeverity - vehicle.slipAngle) * (isAquaplaning ? 1.5 : 3.0) * dt;
+                const severeSlipMultiplier = isAquaplaning ? 1.75 : 0.3;
+                vehicle.slipAngle += (vehicle.steeringAngle * severeSlipMultiplier - vehicle.slipAngle) * (isAquaplaning ? 1.4 : 3.0) * dt;
             } else {
                 vehicle.slipAngle += (0 - vehicle.slipAngle) * 5.0 * dt;
             }
 
             vehicle.heading += vehicle.speed * vehicle.steeringAngle * 0.18 * dt;
 
-            // Matrix Updates
+            // 6. Vector Matrix Coordinates Transformation
             const moveHeading = vehicle.heading + vehicle.slipAngle;
             const forwardVector = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), moveHeading);
             
@@ -538,22 +551,27 @@
             car.position.addScaledVector(vehicle.velocity, dt);
             car.rotation.y = vehicle.heading;
 
+            // Rotational Wheel animations
             car.wheels.forEach(w => {
                 w.mesh.rotation.x += (vehicle.speed / 0.46) * dt;
                 if (w.isFront) w.mesh.rotation.y = vehicle.steeringAngle * 0.8;
             });
 
+            // Dynamic Body Roll
             chassisMesh.rotation.z = -(vehicle.speed * vehicle.steeringAngle) * 0.08;
 
+            // Animate Flap Mesh Geometry for DRS
             if (vehicle.drsActive) {
                 drsFlapMesh.rotation.x = Math.PI / 2.3; drsFlapMesh.position.y = 1.12;
             } else {
                 drsFlapMesh.rotation.x = 0; drsFlapMesh.position.y = 1.0;
             }
 
+            // Loop track space boundary dimensions
             if (Math.abs(car.position.z) > 950) car.position.z = -car.position.z;
             if (Math.abs(car.position.x) > 950) car.position.x = -car.position.x;
 
+            // Smooth Interpolation Camera Engine
             const targetCamOffset = new THREE.Vector3(0, 2.1, -6.3).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading);
             camera.position.lerp(car.position.clone().add(targetCamOffset), 8.0 * dt);
             camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 0.7, 1.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), vehicle.heading)));
@@ -562,6 +580,7 @@
             renderHUDApi(speedKmh, isAquaplaning);
         }
 
+        // --- HUD DATA STREAM RENDER API ---
         function renderHUDApi(speedKmh, isAquaplaning) {
             const displaySpeed = Math.max(0, Math.round(speedKmh));
             document.getElementById('speed-val').innerHTML = `${displaySpeed} <span style="font-size:12px">km/h</span>`;
@@ -579,10 +598,10 @@
             else gear = '8';
             document.getElementById('gear-val').innerText = gear;
 
+            // DRS Box Signaling Lights Engine
             const drsBox = document.getElementById('drs-indicator');
             if (currentWeather.id !== 'DRY') {
-                drsBox.innerText = 'DRS DISABLED';
-                drsBox.className = 'disabled-weather';
+                drsBox.innerText = 'DRS DISABLED'; drsBox.className = 'disabled-weather';
             } else if (vehicle.drsActive) {
                 drsBox.innerText = 'DRS ACTIVE'; drsBox.className = 'active';
             } else if (vehicle.drsAvailable) {
@@ -591,6 +610,7 @@
                 drsBox.innerText = 'DRS LOCK'; drsBox.className = '';
             }
 
+            // Tyre Wear metrics HUD tracking
             const healthFill = document.getElementById('tyre-wear-fill');
             const wearText = document.getElementById('wear-pct');
             const compLabel = document.getElementById('compound-label');
@@ -607,6 +627,7 @@
             compLabel.innerText = vehicle.activeTyre.label;
             compoundsBox.style.color = vehicle.activeTyre.color;
 
+            // Dynamic Weather Box Alert System
             const weatherField = document.getElementById('weather-display');
             if (isAquaplaning) {
                 weatherField.innerText = 'AQUAPLANING SLIP!';
